@@ -117,11 +117,16 @@ namespace TowerDefense.Level
 			{
 				return;
 			}
-			var agentInstance = poolable.GetComponent<Agent>();
+			var agentInstance = CreateAgent(poolable);
 			agentInstance.transform.position = spawnPosition;
 			agentInstance.Initialize();
 			agentInstance.SetNode(node);
 			agentInstance.transform.rotation = node.transform.rotation;
+		}
+
+		protected virtual Agent CreateAgent(Poolable pool)
+		{
+			return pool.GetComponent<Agent>();
 		}
 
 		/// <summary>
