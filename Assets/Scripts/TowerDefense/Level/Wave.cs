@@ -47,7 +47,6 @@ namespace TowerDefense.Level
 			// If the wave is empty then warn the level designer and fire complete event
 			if (spawnInstructions.Count == 0)
 			{
-				Debug.LogWarning("[LEVEL] Empty Wave");
 				SafelyBroadcastWaveCompletedEvent();
 				return;
 			}
