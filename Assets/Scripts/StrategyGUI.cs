@@ -1,0 +1,44 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class StrategyGUI : MonoBehaviour
+{
+    public string strategy;
+    public Image flashImage;
+    public Text flashText;
+    
+    private Color originalImageColor;
+    private Color originalTextColor;
+    private Color flashImageColor;
+    private Color flashTextColor;
+
+    private float t;
+    private int d;
+
+    void Start()
+    {
+        flashText.text = $"New Strategy:\n{strategy}";
+        t = 0.0f;
+        d = 1;
+        originalImageColor = flashImage.color;
+        originalTextColor = flashText.color;
+
+        flashImageColor = originalImageColor;
+        flashTextColor = originalTextColor;
+        flashImageColor.a = 0.5f;
+        flashTextColor.a = 0.5f;
+
+        Destroy(this.gameObject, 5.0f);
+    }
+
+    void Update()
+    {
+        d = (t > 1 || t < 0) ? -Math.Sign(t) : d;
+        t += d * Time.deltaTime;
+        flashImage.color = Color.Lerp(originalImageColor, flashImageColor, t);
+        flashText.color = Color.Lerp(originalTextColor, flashTextColor, t);
+    }
+}
