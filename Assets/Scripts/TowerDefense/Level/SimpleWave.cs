@@ -15,21 +15,25 @@ namespace TowerDefense.Level
 	/// A Wave is a TimedBehaviour, that uses the RepeatingTimer to spawn enemies
 	/// </summary>
 	public class SimpleWave : Wave
-	{
-		bool all_spawned = false;
-		int total_deaths = 0;
+    {
+        private bool _allSpawned;
+        private int _totalDeaths;
 
-		public override float progress
-		{
-			get { return (float)(total_deaths) / spawnInstructions.Count; }
+		public override void Init()
+        {
+            base.Init();
+            _allSpawned = false;
+            _totalDeaths = 0;
 		}
 
-		protected override void SpawnCurrent()
+        public override float progress => (float)(_totalDeaths) / spawnInstructions.Count;
+
+        protected override void SpawnCurrent()
 		{
 			Spawn();
 			if (!TrySetupNextSpawn())
 			{
-				all_spawned = true;
+				_allSpawned = true;
 				// this is required so wave progress is still accurate
 				m_CurrentIndex = spawnInstructions.Count;
 				StopTimer(m_SpawnTimer);
@@ -43,10 +47,10 @@ namespace TowerDefense.Level
 			return agent;
 		}
 
-		void OnAgentRemove(DamageableBehaviour d)
+        protected void OnAgentRemove(DamageableBehaviour d)
 		{
-			total_deaths++;
-			if(all_spawned && total_deaths == spawnInstructions.Count)
+			_totalDeaths++;
+			if(_allSpawned && _totalDeaths == spawnInstructions.Count)
 			{
 				SafelyBroadcastWaveCompletedEvent();
 			}

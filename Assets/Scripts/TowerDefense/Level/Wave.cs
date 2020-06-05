@@ -44,15 +44,15 @@ namespace TowerDefense.Level
 		/// </summary>
 		public virtual void Init()
 		{
-			// If the wave is empty then warn the level designer and fire complete event
+            // If the wave is empty then warn the level designer and fire complete event
 			if (spawnInstructions.Count == 0)
 			{
 				SafelyBroadcastWaveCompletedEvent();
 				return;
 			}
-
+            Debug.Log($"Wave init called for {spawnInstructions[0].agentConfiguration.agentName} at {spawnInstructions[0].delayToSpawn}, total spawns {spawnInstructions.Count}");
 			m_SpawnTimer = new RepeatingTimer(spawnInstructions[0].delayToSpawn, SpawnCurrent);
-			StartTimer(m_SpawnTimer);
+            StartTimer(m_SpawnTimer);
 		}
 
 		/// <summary>
@@ -60,7 +60,7 @@ namespace TowerDefense.Level
 		/// </summary>
 		protected virtual void SpawnCurrent()
 		{
-			Spawn();
+            Spawn();
 			if (!TrySetupNextSpawn())
 			{
 				SafelyBroadcastWaveCompletedEvent();
@@ -76,6 +76,7 @@ namespace TowerDefense.Level
 		protected void Spawn()
 		{
 			SpawnInstruction spawnInstruction = spawnInstructions[m_CurrentIndex];
+            Debug.Log($"Spawning: {m_CurrentIndex} {spawnInstruction}");
 			SpawnAgent(spawnInstruction.agentConfiguration, spawnInstruction.startingNode);
 		}
 

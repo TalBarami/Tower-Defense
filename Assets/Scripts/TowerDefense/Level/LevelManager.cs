@@ -11,7 +11,7 @@ namespace TowerDefense.Level
 	/// <summary>
 	/// The level manager - handles the level states and tracks the player's currency
 	/// </summary>
-	[RequireComponent(typeof(WaveManager))]
+	[RequireComponent(typeof(SimpleWaveManager))]
 	public class LevelManager : Singleton<LevelManager>
 	{
 		/// <summary>
@@ -247,7 +247,7 @@ namespace TowerDefense.Level
 		}
 
 		/// <summary>
-		/// Fired when the WaveManager has finished spawning enemies
+		/// Fired when the SimpleWaveManager has finished spawning enemies
 		/// </summary>
 		protected virtual void OnSpawningCompleted()
 		{

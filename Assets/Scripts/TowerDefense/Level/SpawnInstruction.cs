@@ -26,5 +26,10 @@ namespace TowerDefense.Level
 		/// The starting node, where the agent is spawned
 		/// </summary>
 		public Node startingNode;
-	}
+
+        public override string ToString()
+        {
+            return $"{agentConfiguration.name}, {delayToSpawn}";
+        }
+    }
 }
