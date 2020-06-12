@@ -50,8 +50,7 @@ namespace TowerDefense.Level
 				SafelyBroadcastWaveCompletedEvent();
 				return;
 			}
-            Debug.Log($"Wave init called for {spawnInstructions[0].agentConfiguration.agentName} at {spawnInstructions[0].delayToSpawn}, total spawns {spawnInstructions.Count}");
-			m_SpawnTimer = new RepeatingTimer(spawnInstructions[0].delayToSpawn, SpawnCurrent);
+            m_SpawnTimer = new RepeatingTimer(spawnInstructions[0].delayToSpawn, SpawnCurrent);
             StartTimer(m_SpawnTimer);
 		}
 
@@ -75,9 +74,8 @@ namespace TowerDefense.Level
 		/// </summary>
 		protected void Spawn()
 		{
-			SpawnInstruction spawnInstruction = spawnInstructions[m_CurrentIndex];
-            Debug.Log($"Spawning: {m_CurrentIndex} {spawnInstruction}");
-			SpawnAgent(spawnInstruction.agentConfiguration, spawnInstruction.startingNode);
+			var spawnInstruction = spawnInstructions[m_CurrentIndex];
+            SpawnAgent(spawnInstruction.agentConfiguration, spawnInstruction.startingNode);
 		}
 
 		/// <summary>
@@ -86,7 +84,7 @@ namespace TowerDefense.Level
 		/// <returns>true if there is another spawn instruction, false if not</returns>
 		protected bool TrySetupNextSpawn()
 		{
-			bool hasNext = spawnInstructions.Next(ref m_CurrentIndex);
+			var hasNext = spawnInstructions.Next(ref m_CurrentIndex);
 			if (hasNext)
 			{
 				SpawnInstruction nextSpawnInstruction = spawnInstructions[m_CurrentIndex];
@@ -133,11 +131,9 @@ namespace TowerDefense.Level
 		/// Launch the waveCompleted event
 		/// </summary>
 		protected void SafelyBroadcastWaveCompletedEvent()
-		{
-			if (waveCompleted != null)
-			{
-				waveCompleted();
-			}
-		}
+        {
+			Debug.Log("Wave complete invoked");
+            waveCompleted?.Invoke();
+        }
 	}
 }

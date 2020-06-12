@@ -11,6 +11,18 @@ namespace TowerDefense.Level
 	[Serializable]
 	public class SpawnInstruction
 	{
+        public SpawnInstruction()
+        {
+
+        }
+
+        public SpawnInstruction(AgentConfiguration agentConfiguration, int delayToSpawn, Node startingNode)
+        {
+            this.agentConfiguration = agentConfiguration;
+            this.delayToSpawn = delayToSpawn;
+			this.startingNode = startingNode;
+        }
+
 		/// <summary>
 		/// The agent to spawn - i.e. the monster for the wave
 		/// </summary>

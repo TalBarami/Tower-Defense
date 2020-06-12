@@ -17,10 +17,10 @@ public class StrategyGUI : MonoBehaviour
 
     private float t;
     private int d;
+    private bool visible;
 
     void Start()
     {
-        flashText.text = $"New Strategy:\n{strategy}";
         t = 0.0f;
         d = 1;
         originalImageColor = flashImage.color;
@@ -31,14 +31,34 @@ public class StrategyGUI : MonoBehaviour
         flashImageColor.a = 0.5f;
         flashTextColor.a = 0.5f;
 
-        Destroy(this.gameObject, 5.0f);
+        flashImage.color = flashText.color = new Color(0, 0, 0, 0);
+    }
+
+    public void Set(string strategy)
+    {
+        this.strategy = strategy;
+        flashText.text = $"New Strategy:\n{strategy}";
+        visible = true;
+        StartCoroutine(Disable());
+        // After 5 seconds, visible = false
     }
 
     void Update()
     {
-        d = (t > 1 || t < 0) ? -Math.Sign(t) : d;
-        t += d * Time.deltaTime;
-        flashImage.color = Color.Lerp(originalImageColor, flashImageColor, t);
-        flashText.color = Color.Lerp(originalTextColor, flashTextColor, t);
+        if (visible)
+        {
+            d = (t > 1 || t < 0) ? -Math.Sign(t) : d;
+            t += d * Time.deltaTime;
+            flashImage.color = Color.Lerp(originalImageColor, flashImageColor, t);
+            flashText.color = Color.Lerp(originalTextColor, flashTextColor, t);
+        }
+        
+    }
+
+    private IEnumerator Disable()
+    {
+        yield return new WaitForSeconds(5);
+        visible = false;
+        flashImage.color = flashText.color = new Color(0, 0, 0, 0);
     }
 }

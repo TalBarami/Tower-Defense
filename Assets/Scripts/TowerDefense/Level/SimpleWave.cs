@@ -16,24 +16,24 @@ namespace TowerDefense.Level
 	/// </summary>
 	public class SimpleWave : Wave
     {
-        private bool _allSpawned;
-        private int _totalDeaths;
+        private bool allSpawned;
+        private int totalDeaths;
 
 		public override void Init()
         {
             base.Init();
-            _allSpawned = false;
-            _totalDeaths = 0;
+            allSpawned = false;
+            totalDeaths = 0;
 		}
 
-        public override float progress => (float)(_totalDeaths) / spawnInstructions.Count;
+        public override float progress => (float)(totalDeaths) / spawnInstructions.Count;
 
         protected override void SpawnCurrent()
 		{
 			Spawn();
 			if (!TrySetupNextSpawn())
 			{
-				_allSpawned = true;
+				allSpawned = true;
 				// this is required so wave progress is still accurate
 				m_CurrentIndex = spawnInstructions.Count;
 				StopTimer(m_SpawnTimer);
@@ -48,10 +48,12 @@ namespace TowerDefense.Level
 		}
 
         protected void OnAgentRemove(DamageableBehaviour d)
-		{
-			_totalDeaths++;
-			if(_allSpawned && _totalDeaths == spawnInstructions.Count)
-			{
+        {
+            d.removed -= OnAgentRemove;
+            totalDeaths++;
+            Debug.Log($"All spawned: {allSpawned}, Agent death: {totalDeaths}/{spawnInstructions.Count}");
+			if (allSpawned && totalDeaths == spawnInstructions.Count)
+            {
 				SafelyBroadcastWaveCompletedEvent();
 			}
 		}
