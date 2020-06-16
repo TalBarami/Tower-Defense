@@ -51,8 +51,7 @@ namespace TowerDefense.Level
         {
             d.removed -= OnAgentRemove;
             totalDeaths++;
-            Debug.Log($"All spawned: {allSpawned}, Agent death: {totalDeaths}/{spawnInstructions.Count}");
-			if (allSpawned && totalDeaths == spawnInstructions.Count)
+            if (allSpawned && totalDeaths == spawnInstructions.Count)
             {
 				SafelyBroadcastWaveCompletedEvent();
 			}

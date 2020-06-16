@@ -34,12 +34,9 @@ namespace TowerDefense.Level
 		/// </summary>
 		public event Action waveCompleted;
 
-		public virtual float progress
-		{
-			get { return (float) (m_CurrentIndex) / spawnInstructions.Count; }
-		}
+		public virtual float progress => (float) (m_CurrentIndex) / spawnInstructions.Count;
 
-		/// <summary>
+        /// <summary>
 		/// Initializes the Wave
 		/// </summary>
 		public virtual void Init()
@@ -132,7 +129,6 @@ namespace TowerDefense.Level
 		/// </summary>
 		protected void SafelyBroadcastWaveCompletedEvent()
         {
-			Debug.Log("Wave complete invoked");
             waveCompleted?.Invoke();
         }
 	}

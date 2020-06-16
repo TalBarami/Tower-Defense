@@ -16,10 +16,10 @@ namespace TowerDefense.Level
 
         }
 
-        public SpawnInstruction(AgentConfiguration agentConfiguration, int delayToSpawn, Node startingNode)
+        public SpawnInstruction(AgentConfiguration agentConfiguration, double delayToSpawn, Node startingNode)
         {
             this.agentConfiguration = agentConfiguration;
-            this.delayToSpawn = delayToSpawn;
+            this.delayToSpawn = (float)delayToSpawn;
 			this.startingNode = startingNode;
         }
 
