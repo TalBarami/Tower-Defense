@@ -79,12 +79,14 @@ namespace TowerDefense.UI
 				Button button = m_Buttons[index];
 				SetUpNavigation(button, m_Buttons[index - 1], m_Buttons[index + 1]);
 			}
-			
 
-			SetUpNavigation(m_Buttons[0], backButton, m_Buttons[1]);
-			SetUpNavigation(m_Buttons[m_Buttons.Count - 1], m_Buttons[m_Buttons.Count - 2], null);
-			
-			mouseScroll.SetHasRightBuffer(rightBuffer != null);
+            if (m_Buttons.Count > 1)
+            {
+				SetUpNavigation(m_Buttons[0], backButton, m_Buttons[1]);
+				SetUpNavigation(m_Buttons[m_Buttons.Count - 1], m_Buttons[m_Buttons.Count - 2], null);
+			}
+
+            mouseScroll.SetHasRightBuffer(rightBuffer != null);
 		}
 
 		/// <summary>

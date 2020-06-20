@@ -40,6 +40,7 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
         public override int totalWaves => waves.Count;
         
         protected int PhaseLength;
+        protected int BossCycle = 10;
 
         public override void StartWaves()
         {
@@ -48,29 +49,29 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
             PhaseLength = waves.Count;
             Agents = new List<Configuration>()
             {
-                new Configuration(AgentConfigurations[0], 1),   // Buggy
-                new Configuration(AgentConfigurations[1], 2),   // Copter
-                new Configuration(AgentConfigurations[2], 3),   // Tank
-                new Configuration(AgentConfigurations[3], 25),  // Boss
-                new Configuration(AgentConfigurations[4], 2),   // Super Buggy
-                new Configuration(AgentConfigurations[5], 4),   // Super Copter
-                new Configuration(AgentConfigurations[6], 6),   // Super Tank
-                new Configuration(AgentConfigurations[7], 50),  // Super Boss
+                new Configuration(AgentConfigurations[0], 1), // Buggy
+                new Configuration(AgentConfigurations[1], 2), // Copter
+                new Configuration(AgentConfigurations[2], 3), // Tank
+                new Configuration(AgentConfigurations[3], BossCycle), // Boss
+                new Configuration(AgentConfigurations[4], 2), // Super Buggy
+                new Configuration(AgentConfigurations[5], 4), // Super Copter
+                new Configuration(AgentConfigurations[6], 6), // Super Tank
+                new Configuration(AgentConfigurations[7], 3 * BossCycle), // Super Boss
             };
 
             Strategies = new List<Strategy>()
             {
                 new Strategy("Frontal Assault",
                     Tuple.Create(0, 3),
-                    new List<Node>(){ StartingNodes[0]},
+                    new List<Node>() {StartingNodes[0]},
                     new List<Configuration>() {Agents[0], Agents[1], Agents[2], Agents[4], Agents[5], Agents[6]}),
                 new Strategy("Flanks Assault",
                     Tuple.Create(0, 3),
-                    new List<Node>(){ StartingNodes[2], StartingNodes[4], StartingNodes[5]},
+                    new List<Node>() {StartingNodes[2], StartingNodes[4], StartingNodes[5]},
                     new List<Configuration>() {Agents[0], Agents[1], Agents[2], Agents[4], Agents[5], Agents[6]}),
                 new Strategy("Sneak Assault",
                     Tuple.Create(1, 3),
-                    new List<Node>(){ StartingNodes[3]},
+                    new List<Node>() {StartingNodes[3]},
                     new List<Configuration>() {Agents[0], Agents[1], Agents[4], Agents[5]}),
 
                 new Strategy("Quick Assault",
@@ -89,15 +90,31 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 
             BossFights = new List<Strategy>()
             {
-                new Strategy("Boss Fight",
+                new BossFight("Boss Fight",
+                    Tuple.Create(0, 3),
+                    StartingNodes,
+                    new List<Configuration>() {Agents[0], Agents[1], Agents[2], Agents[4], Agents[5], Agents[6]},
                     Tuple.Create(5, 5),
                     new List<Node>() {StartingNodes[0]},
                     new List<Configuration>() {Agents[3]}),
-                new Strategy("Super Boss Fight",
+                new BossFight("Double Boss Fight",
+                    Tuple.Create(0, 3),
+                    StartingNodes,
+                    new List<Configuration>() {Agents[0], Agents[1], Agents[2], Agents[4], Agents[5], Agents[6]},
+                    Tuple.Create(5, 5),
+                    new List<Node>() {StartingNodes[0]},
+                    new List<Configuration>() {Agents[3]}),
+                new BossFight("Super Boss Fight",
+                    Tuple.Create(0, 3),
+                    StartingNodes,
+                    new List<Configuration>() {Agents[0], Agents[1], Agents[2], Agents[4], Agents[5], Agents[6]},
                     Tuple.Create(5, 5),
                     new List<Node>() {StartingNodes[0]},
                     new List<Configuration>() {Agents[7]}),
-                new Strategy("Ultimate Boss Fight",
+                new BossFight("Ultimate Boss Fight",
+                    Tuple.Create(0, 3),
+                    StartingNodes,
+                    new List<Configuration>() {Agents[0], Agents[1], Agents[2], Agents[4], Agents[5], Agents[6]},
                     Tuple.Create(5, 5),
                     new List<Node>() {StartingNodes[0]},
                     new List<Configuration>() {Agents[3], Agents[7]}),
@@ -118,8 +135,8 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                 waves[m_CurrentIndex].waveCompleted -= NextWave;
                 waves.Clear();
                 m_CurrentIndex = 0;
-
-                ChooseStrategy(EliminatedWaves.Count);
+                Debug.Log("Changing Strategy");
+                ChangeStrategy(EliminatedWaves.Count);
 
                 InitCurrentWave();
             }
@@ -129,26 +146,61 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
             }
         }
 
-        protected void ChooseStrategy(int waveNum)
+        protected Strategy ChooseStrategy(List<Strategy> possibleStrategies)
         {
-            var strategies = waveNum % 10 == 0 ? BossFights : Strategies;
-            var phaseLength = waveNum % 10 == 0 ? 1 : PhaseLength;
+            foreach (var s in possibleStrategies)
+            {
+                Debug.Log($"Possible Strategy: {s} with score {s.Score}");
+            }
+            var sumOfScores = possibleStrategies.Sum(s => s.Score);
+            var roll = Random.Next(sumOfScores);
+            var acc = 0;
+            foreach (var s in possibleStrategies)
+            {
+                acc += s.Score;
+                if (roll < acc)
+                {
+                    return s;
+                }
+            }
+            Debug.Log($"Rolled {roll}, acc {acc}, sum of scores {sumOfScores}");
 
-            var possibleStrategies = strategies.FindAll(s => s.CanSet(waveNum));
-            Debug.Log($"Possible Strategies: {possibleStrategies}");
-            var strategy = possibleStrategies[Random.Next(possibleStrategies.Count)];
+            throw new Exception("Possible strategies is empty");
+        }
+
+        protected void ChangeStrategy(int waveNum)
+        {
+            Strategy strategy;
+            if (waveNum % BossCycle == 0) // Boss Fight
+            {
+                var selectionIdx = Math.Min(waveNum / BossCycle - 1, BossFights.Count-1);
+                strategy = BossFights[selectionIdx];
+
+                Debug.Log($"Generating for {strategy}");
+                waves.Add(GenerateWave(strategy, waveNum));
+                for (var i = 1; i < PhaseLength; i++)
+                {
+                    var randomStrategy = Strategies[Random.Next(Strategies.Count)];
+                    waves.Add(GenerateWave(randomStrategy, waveNum + i));
+                }
+            }
+            else
+            {
+                var possibleStrategies = Strategies.FindAll(s => s.CanSet(waveNum));
+                strategy = ChooseStrategy(possibleStrategies);
+                for (var i = 0; i < PhaseLength; i++)
+                {
+                    waves.Add(GenerateWave(strategy, waveNum + i));
+                }
+            }
 
             Debug.Log($"Changed Strategy to {strategy}");
             notifier.Set(strategy.Name);
-
-            for (var i = 0; i < phaseLength; i++)
-            {
-                waves.Add(GenerateWave(strategy, waveNum + i));
-            }
         }
 
         protected virtual Wave GenerateWave(Strategy strategy, int waveIndex)
         {
+            Debug.Log("");
             var waveObject = new GameObject($"Wave {m_CurrentIndex + 1}");
 			waveObject.transform.parent = gameObject.transform;
 
@@ -158,6 +210,12 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
             var spawnInstructions = strategy.ProduceEnemies(waveIndex);
 
             simpleWave.spawnInstructions = spawnInstructions;
+
+            simpleWave.destinationReached += () =>
+            {
+                strategy.Score += 1;
+                Debug.Log($"Destination reached for {strategy}, new score: {strategy.Score}");
+            };
 
             return simpleWave;
         }
@@ -178,6 +236,8 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
         {
             public static Random Random = new Random();
             public string Name { get; }
+            public int Score { get; set; }
+
             protected Tuple<int, int> DelayRange;
             protected List<Node> Nodes;
             protected List<Configuration> Enemies;
@@ -188,6 +248,7 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                 DelayRange = delayRange;
                 Nodes = nodes;
                 Enemies = enemies;
+                Score = 1;
             }
 
             public virtual bool CanSet(int waveIndex)
@@ -197,6 +258,7 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 
             public virtual List<SpawnInstruction> ProduceEnemies(int waveIndex)
             {
+                Debug.Log("Normal Produce Enemies");
                 var sum = 0;
                 var result = new List<SpawnInstruction>();
 
@@ -235,9 +297,9 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
             protected List<Node> BossNodes;
             protected readonly List<Configuration> Bosses;
 
-
             public override List<SpawnInstruction> ProduceEnemies(int waveIndex)
             {
+                Debug.Log("Boss Produce Enemies");
                 var result = new List<SpawnInstruction>();
                 var sum = 0;
                 while (sum < waveIndex)
@@ -254,14 +316,16 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                     var selected = possibleConfigurations[Random.Next(possibleConfigurations.Count)];
                     sum += selected.Price;
 
-                    var delay = Random.NextDouble() * (DelayRange.Item2 - DelayRange.Item1) + DelayRange.Item1;
-                    var node = Nodes[Random.Next(Nodes.Count)];
+                    var delay = Random.NextDouble() * (BossDelayRange.Item2 - BossDelayRange.Item1) + BossDelayRange.Item1;
+                    var node = BossNodes[Random.Next(BossNodes.Count)];
 
                     result.Add(new SpawnInstruction(selected.AgentConfiguration, delay, node));
+                    Debug.Log("Boss added");
                 }
 
-                var trash = base.ProduceEnemies(waveIndex / 5);
+                var trash = base.ProduceEnemies(waveIndex / 2);
                 result.AddRange(trash);
+                Debug.Log($"Trash added: {trash.Count}");
                 return result;
             }
 

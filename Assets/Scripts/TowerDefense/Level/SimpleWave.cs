@@ -19,6 +19,8 @@ namespace TowerDefense.Level
         private bool allSpawned;
         private int totalDeaths;
 
+		public event Action destinationReached;
+
 		public override void Init()
         {
             base.Init();
@@ -44,6 +46,7 @@ namespace TowerDefense.Level
 		{
 			var agent = pool.GetComponent<Agent>();
 			agent.removed += OnAgentRemove;
+            agent.destinationReached2 += OnAgentDestinationReach;
 			return agent;
 		}
 
@@ -56,5 +59,13 @@ namespace TowerDefense.Level
 				SafelyBroadcastWaveCompletedEvent();
 			}
 		}
+
+        protected void OnAgentDestinationReach(Agent a)
+        {
+			Debug.Log("Destination reached");
+            a.destinationReached2 -= OnAgentDestinationReach;
+            destinationReached?.Invoke();
+
+        }
 	}
 }

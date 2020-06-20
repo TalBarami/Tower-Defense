@@ -51,6 +51,8 @@ namespace TowerDefense.Agents
 		/// </summary>
 		public event Action<Node> destinationReached;
 
+        public event Action<Agent> destinationReached2;
+
 		/// <summary>
 		/// Position offset for an applied affect
 		/// </summary>
@@ -226,11 +228,9 @@ namespace TowerDefense.Agents
 		public virtual void HandleDestinationReached()
 		{
 			state = State.PathComplete;
-			if (destinationReached != null)
-			{
-				destinationReached(m_CurrentNode);
-			} 
-		}
+            destinationReached?.Invoke(m_CurrentNode);
+            destinationReached2?.Invoke(this);
+        }
 		
 		/// <summary>
 		/// Lazy Load, if necesaary and ensure the NavMeshAgent is disabled
