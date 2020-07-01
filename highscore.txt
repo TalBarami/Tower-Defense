@@ -1,0 +1,15 @@
+Tal=5
+Or=5
+Renard=10
+Bla=1
+Bla=2
+BlaBla=3
+Hello=8
+Hello2=8
+hello=5
+hello=5
+hello?=5
+blablaOr?=5
+hey=5
+ss=5
+a=5

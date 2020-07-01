@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Assets.Scripts.TowerDefense.Level.WaveStrategy;
 using Core.Economy;
 using Core.Health;
 using Core.Utilities;
 using TowerDefense.Economy;
+using TowerDefense.Game;
 using TowerDefense.Towers.Data;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace TowerDefense.Level
 {
@@ -14,7 +19,11 @@ namespace TowerDefense.Level
 	/// </summary>
 	[RequireComponent(typeof(SimpleWaveManager))]
 	public class LevelManager : Singleton<LevelManager>
-	{
+    {
+        public GameObject GameUI;
+        public GameObject NamePromptGameObject;
+        public GameObject HighScoreGameObject;
+
 		/// <summary>
 		/// The configured level intro. If this is null the LevelManager will fall through to the gameplay state (i.e. SpawningEnemies)
 		/// </summary>
@@ -178,7 +187,7 @@ namespace TowerDefense.Level
 			waveManager = GetComponent<WaveManager>();
 			waveManager.spawningCompleted += OnSpawningCompleted;
 
-			// Does not use the change state function as we don't need to broadcast the event for this default value
+            // Does not use the change state function as we don't need to broadcast the event for this default value
 			levelState = LevelState.Intro;
 			numberOfEnemies = 0;
 
@@ -203,7 +212,9 @@ namespace TowerDefense.Level
 			{
 				homeBases[i].died += OnHomeBaseDestroyed;
 			}
-		}
+
+            levelFailed = Prompt;
+        }
 
 		/// <summary>
 		/// Updates the currency gain controller
@@ -342,11 +353,56 @@ namespace TowerDefense.Level
 		/// Calls the <see cref="levelFailed"/> event
 		/// </summary>
 		protected virtual void SafelyCallLevelFailed()
-		{
-			if (levelFailed != null)
+        {
+            if (levelFailed != null)
 			{
 				levelFailed();
 			}
+		}
+
+        public void AddScore(string name, int score)
+        {
+            File.AppendAllText("highscore.txt", $"{name}=5" + Environment.NewLine);
+        }
+
+        public List<Tuple<string, int>> GetHighScores()
+        {
+            var lines = File.ReadAllLines("highscore.txt");
+            var result = new List<Tuple<string, int>>();
+
+            foreach (var line in lines)
+            {
+                var kv = line.Split('=');
+                if (kv.Length == 2 && int.TryParse(kv[1], out var score))
+                {
+                    result.Add(new Tuple<string, int>(kv[0], score));
+                }
+			}
+
+            return result.OrderBy(x => x.Item2).Reverse().ToList();
+		}
+
+        public void DisplayHighScore()
+        {
+            var obj = Instantiate(HighScoreGameObject, GameUI.transform);
+            var text = obj.GetComponent<HighScoreText>();
+            obj.transform.parent = GameUI.transform;
+            obj.transform.position = GameUI.transform.position;
+            text.Set(GetHighScores());
+		}
+
+        public void Prompt()
+        {
+            var obj = Instantiate(NamePromptGameObject, GameUI.transform);
+            var nameReader = obj.GetComponent<NameReader>();
+            nameReader.onNameSubmit += s =>
+            {
+                AddScore(s, waveManager.score);
+                DisplayHighScore();
+				Destroy(obj);
+            };
+            obj.transform.parent = GameUI.transform;
+            obj.transform.position = GameUI.transform.position;
 		}
 	}
 }

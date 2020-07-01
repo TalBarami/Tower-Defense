@@ -33,6 +33,8 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
         /// </summary>
         public abstract int totalWaves { get; }
 
+        public int score { get; set; }
+
         public float waveProgress
         {
             get

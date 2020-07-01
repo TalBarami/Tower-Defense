@@ -17,7 +17,10 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 	public class SmartWaveManager : WaveManager
     {
         public GameObject StrategyNotifierObject;
-        private StrategyGUI notifier;
+        public GameObject ScoreUpdateObject;
+
+        private StrategyGUI strategyNotifier;
+        private ScoreUpdate scoreUpdate;
 
         public List<Node> StartingNodes; // 0-Long, 1-Short, 2-TopLeft, 3-BotLeft, 4-TopRight, 5-BotRight
         public List<AgentConfiguration> AgentConfigurations; // 0-buggy, 1-copter, 2-tank, 3-boss, 4-5-6-7-supers.
@@ -29,7 +32,6 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 
         protected List<Wave> EliminatedWaves = new List<Wave>();
 
-
         /// <summary>
         /// The waves to run in order
         /// </summary>
@@ -38,14 +40,21 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 
         public override List<Wave> waves => Waves;
         public override int totalWaves => waves.Count;
+
         
         protected int PhaseLength;
         protected int BossCycle = 10;
 
+        protected Strategy CurrentStrategy;
+        protected int InitialStrategyScore;
+
         public override void StartWaves()
         {
             Random = new Random();
-            notifier = StrategyNotifierObject.GetComponent<StrategyGUI>();
+            strategyNotifier = StrategyNotifierObject.GetComponent<StrategyGUI>();
+            scoreUpdate = ScoreUpdateObject.GetComponent<ScoreUpdate>();
+            score = 0;
+
             PhaseLength = waves.Count;
             Agents = new List<Configuration>()
             {
@@ -129,6 +138,8 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 		/// </summary>
 		protected override void NextWave()
         {
+            Debug.Log("Next wave called");
+            scoreUpdate.Set(++score);
             if (m_CurrentIndex + 1 == PhaseLength)
             {
                 EliminatedWaves.AddRange(waves);
@@ -146,8 +157,40 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
             }
         }
 
+        protected void ChangeStrategy(int waveNum)
+        {
+            if (waveNum % BossCycle == 0) // Boss Fight
+            {
+                var selectionIdx = Math.Min(waveNum / BossCycle - 1, BossFights.Count-1);
+                CurrentStrategy = BossFights[selectionIdx];
+
+                Debug.Log($"Generating for {CurrentStrategy}");
+                waves.Add(GenerateWave(CurrentStrategy, waveNum));
+                for (var i = 1; i < PhaseLength; i++)
+                {
+                    var randomStrategy = Strategies[Random.Next(Strategies.Count)];
+                    waves.Add(GenerateWave(randomStrategy, waveNum + i));
+                }
+            }
+            else
+            {
+                var possibleStrategies = Strategies.FindAll(s => s.CanSet(waveNum));
+                CurrentStrategy = ChooseStrategy(possibleStrategies);
+                for (var i = 0; i < PhaseLength; i++)
+                {
+                    waves.Add(GenerateWave(CurrentStrategy, waveNum + i));
+                }
+            }
+
+            Debug.Log($"Changed Strategy to {CurrentStrategy}");
+            strategyNotifier.Set(CurrentStrategy.Name);
+        }
         protected Strategy ChooseStrategy(List<Strategy> possibleStrategies)
         {
+            if (CurrentStrategy != null && CurrentStrategy.Score > 1 && CurrentStrategy.Score == InitialStrategyScore)
+            {
+                CurrentStrategy.Score--;
+            }
             foreach (var s in possibleStrategies)
             {
                 Debug.Log($"Possible Strategy: {s} with score {s.Score}");
@@ -166,36 +209,6 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
             Debug.Log($"Rolled {roll}, acc {acc}, sum of scores {sumOfScores}");
 
             throw new Exception("Possible strategies is empty");
-        }
-
-        protected void ChangeStrategy(int waveNum)
-        {
-            Strategy strategy;
-            if (waveNum % BossCycle == 0) // Boss Fight
-            {
-                var selectionIdx = Math.Min(waveNum / BossCycle - 1, BossFights.Count-1);
-                strategy = BossFights[selectionIdx];
-
-                Debug.Log($"Generating for {strategy}");
-                waves.Add(GenerateWave(strategy, waveNum));
-                for (var i = 1; i < PhaseLength; i++)
-                {
-                    var randomStrategy = Strategies[Random.Next(Strategies.Count)];
-                    waves.Add(GenerateWave(randomStrategy, waveNum + i));
-                }
-            }
-            else
-            {
-                var possibleStrategies = Strategies.FindAll(s => s.CanSet(waveNum));
-                strategy = ChooseStrategy(possibleStrategies);
-                for (var i = 0; i < PhaseLength; i++)
-                {
-                    waves.Add(GenerateWave(strategy, waveNum + i));
-                }
-            }
-
-            Debug.Log($"Changed Strategy to {strategy}");
-            notifier.Set(strategy.Name);
         }
 
         protected virtual Wave GenerateWave(Strategy strategy, int waveIndex)
@@ -293,9 +306,9 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 
         class BossFight : Strategy
         {
-            protected Tuple<int, int> BossDelayRange;
-            protected List<Node> BossNodes;
-            protected readonly List<Configuration> Bosses;
+            private readonly Tuple<int, int> bossDelayRange;
+            private readonly List<Node> bossNodes;
+            private readonly List<Configuration> bosses;
 
             public override List<SpawnInstruction> ProduceEnemies(int waveIndex)
             {
@@ -304,7 +317,7 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                 var sum = 0;
                 while (sum < waveIndex)
                 {
-                    var possibleConfigurations = Bosses.FindAll(x => x.Price <= waveIndex - sum);
+                    var possibleConfigurations = bosses.FindAll(x => x.Price <= waveIndex - sum);
                     if (possibleConfigurations.Count == 0)
                     {
                         if (result.Count == 0)
@@ -316,8 +329,8 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                     var selected = possibleConfigurations[Random.Next(possibleConfigurations.Count)];
                     sum += selected.Price;
 
-                    var delay = Random.NextDouble() * (BossDelayRange.Item2 - BossDelayRange.Item1) + BossDelayRange.Item1;
-                    var node = BossNodes[Random.Next(BossNodes.Count)];
+                    var delay = Random.NextDouble() * (bossDelayRange.Item2 - bossDelayRange.Item1) + bossDelayRange.Item1;
+                    var node = bossNodes[Random.Next(bossNodes.Count)];
 
                     result.Add(new SpawnInstruction(selected.AgentConfiguration, delay, node));
                     Debug.Log("Boss added");
@@ -331,15 +344,15 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 
             public override bool CanSet(int waveIndex)
             {
-                return Bosses.Any(x => x.Price <= waveIndex);
+                return bosses.Any(x => x.Price <= waveIndex);
             }
 
             public BossFight(string name, Tuple<int, int> delayRange, List<Node> nodes, List<Configuration> enemies, Tuple<int, int> bossDelayRange, List<Node> bossNodes, List<Configuration> bosses)
                 : base(name, delayRange, nodes, enemies)
             {
-                this.BossDelayRange = bossDelayRange;
-                this.BossNodes = bossNodes;
-                this.Bosses = bosses;
+                this.bossDelayRange = bossDelayRange;
+                this.bossNodes = bossNodes;
+                this.bosses = bosses;
 
             }
         }
