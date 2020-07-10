@@ -1,4 +1,5 @@
 ﻿
+using System.Collections;
 using Core.Game;
 using Core.Health;
 using TowerDefense.Game;
@@ -54,7 +55,7 @@ namespace TowerDefense.UI
 		/// </summary>
 		public string levelCompleteText = "{0} COMPLETE!";
 		
-		public string levelFailedText = "{0} FAILED!";
+		public string levelFailedText = "{0} OVER!";
 
 		/// <summary>
 		/// Background image
@@ -147,27 +148,38 @@ namespace TowerDefense.UI
 			m_LevelManager.levelFailed += Defeat;
 		}
 
+        protected IEnumerator DisplayEndScreen(GameObject obj)
+        {
+            Debug.Log("Starting coroutine");
+            var waitForSeconds = new WaitForSeconds(3.0f);
+            yield return new WaitForSeconds(3.0f);
+            Debug.Log("3 seconds elapsed");
+            Destroy(obj);
+            endGameCanvas.enabled = true;
+        }
+
 		/// <summary>
 		/// Shows the end game screen
 		/// </summary>
 		protected void OpenEndGameScreen(string endResultText)
 		{
+            m_LevelManager.Prompt(() => endGameCanvas.enabled = true);
 			LevelItem level = GameManager.instance.GetLevelForCurrentScene();
-			endGameCanvas.enabled = true;
 
-			int score = CalculateFinalScore();
+            int score = CalculateFinalScore();
 			scorePanel.SetStars(score);
-			if (level != null) 
+
+            if (level != null) 
 			{
-				endGameMessageText.text = string.Format (endResultText, level.name.ToUpper ());
+                endGameMessageText.text = string.Format (endResultText, level.name.ToUpper ());
 				GameManager.instance.CompleteLevel (level.id, score);
 			} 
 			else 
 			{
-				// If the level is not in LevelList, we should just use the name of the scene. This will not store the level's score.
+                // If the level is not in LevelList, we should just use the name of the scene. This will not store the level's score.
 				string levelName = SceneManager.GetActiveScene ().name;
 				endGameMessageText.text = string.Format (endResultText, levelName.ToUpper ());
-			}
+            }
 
 
 			if (!HUD.GameUI.instanceExists)
@@ -241,7 +253,7 @@ namespace TowerDefense.UI
 			background.color = loseBackgroundColor;
 		}
 
-		/// <summary>
+        /// <summary>
 		/// Safely unsubscribes from <see cref="LevelManager" /> events.
 		/// </summary>
 		protected void OnDestroy()

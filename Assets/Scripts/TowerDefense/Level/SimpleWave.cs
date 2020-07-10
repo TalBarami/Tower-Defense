@@ -62,7 +62,6 @@ namespace TowerDefense.Level
 
         protected void OnAgentDestinationReach(Agent a)
         {
-			Debug.Log("Destination reached");
             a.destinationReached2 -= OnAgentDestinationReach;
             destinationReached?.Invoke();
 

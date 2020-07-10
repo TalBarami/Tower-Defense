@@ -138,7 +138,6 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 		/// </summary>
 		protected override void NextWave()
         {
-            Debug.Log("Next wave called");
             scoreUpdate.Set(++score);
             if (m_CurrentIndex + 1 == PhaseLength)
             {
@@ -146,7 +145,6 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                 waves[m_CurrentIndex].waveCompleted -= NextWave;
                 waves.Clear();
                 m_CurrentIndex = 0;
-                Debug.Log("Changing Strategy");
                 ChangeStrategy(EliminatedWaves.Count);
 
                 InitCurrentWave();
@@ -164,7 +162,6 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                 var selectionIdx = Math.Min(waveNum / BossCycle - 1, BossFights.Count-1);
                 CurrentStrategy = BossFights[selectionIdx];
 
-                Debug.Log($"Generating for {CurrentStrategy}");
                 waves.Add(GenerateWave(CurrentStrategy, waveNum));
                 for (var i = 1; i < PhaseLength; i++)
                 {
@@ -191,10 +188,7 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
             {
                 CurrentStrategy.Score--;
             }
-            foreach (var s in possibleStrategies)
-            {
-                Debug.Log($"Possible Strategy: {s} with score {s.Score}");
-            }
+
             var sumOfScores = possibleStrategies.Sum(s => s.Score);
             var roll = Random.Next(sumOfScores);
             var acc = 0;
@@ -206,14 +200,12 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                     return s;
                 }
             }
-            Debug.Log($"Rolled {roll}, acc {acc}, sum of scores {sumOfScores}");
 
             throw new Exception("Possible strategies is empty");
         }
 
         protected virtual Wave GenerateWave(Strategy strategy, int waveIndex)
         {
-            Debug.Log("");
             var waveObject = new GameObject($"Wave {m_CurrentIndex + 1}");
 			waveObject.transform.parent = gameObject.transform;
 
@@ -227,7 +219,6 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
             simpleWave.destinationReached += () =>
             {
                 strategy.Score += 1;
-                Debug.Log($"Destination reached for {strategy}, new score: {strategy.Score}");
             };
 
             return simpleWave;
@@ -271,7 +262,6 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 
             public virtual List<SpawnInstruction> ProduceEnemies(int waveIndex)
             {
-                Debug.Log("Normal Produce Enemies");
                 var sum = 0;
                 var result = new List<SpawnInstruction>();
 
@@ -282,7 +272,7 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                     {
                         if (result.Count == 0)
                         {
-                            Debug.Log($"Critical Error: No enemies found at all for wave {waveIndex} with strategy {Name}");
+                            Debug.LogError($"Critical Error: No enemies found at all for wave {waveIndex} with strategy {Name}");
                         }
                         break;
                     }
@@ -312,7 +302,6 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
 
             public override List<SpawnInstruction> ProduceEnemies(int waveIndex)
             {
-                Debug.Log("Boss Produce Enemies");
                 var result = new List<SpawnInstruction>();
                 var sum = 0;
                 while (sum < waveIndex)
@@ -322,7 +311,7 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                     {
                         if (result.Count == 0)
                         {
-                            Debug.Log($"Critical Error: No enemies found at all for wave {waveIndex} with strategy {Name}");
+                            Debug.LogError($"Critical Error: No enemies found at all for wave {waveIndex} with strategy {Name}");
                         }
                         break;
                     }
@@ -333,12 +322,10 @@ namespace Assets.Scripts.TowerDefense.Level.WaveStrategy
                     var node = bossNodes[Random.Next(bossNodes.Count)];
 
                     result.Add(new SpawnInstruction(selected.AgentConfiguration, delay, node));
-                    Debug.Log("Boss added");
                 }
 
                 var trash = base.ProduceEnemies(waveIndex / 2);
                 result.AddRange(trash);
-                Debug.Log($"Trash added: {trash.Count}");
                 return result;
             }
 

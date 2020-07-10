@@ -346,8 +346,10 @@ namespace TowerDefense.UI.HUD
 		{
 			if (state != State.Normal)
 			{
-				throw new InvalidOperationException("Trying to enter Build mode when not in Normal mode");
-			}
+				Debug.LogWarning("Trying to enter Build mode when not in Normal mode");
+                return;
+                // throw new InvalidOperationException("Trying to enter Build mode when not in Normal mode");
+            }
 			
 			if (m_CurrentTower != null)
 			{
@@ -687,8 +689,10 @@ namespace TowerDefense.UI.HUD
 		public void TrySelectTower(PointerInfo info)
 		{
 			if (state != State.Normal)
-			{
-				throw new InvalidOperationException("Trying to select towers outside of Normal state");
+            {
+				Debug.LogWarning("Trying to select towers outside of Normal state");
+                return;
+				// throw new InvalidOperationException("Trying to select towers outside of Normal state");
 			}
 			UIPointer uiPointer = WrapPointer(info);
 			RaycastHit output;

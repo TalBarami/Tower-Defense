@@ -139,6 +139,7 @@ namespace TowerDefense.Targetting
 		/// </summary>
 		public Targetable GetTarget()
 		{
+			Debug.Log($"Current target: {m_CurrrentTargetable.name}");
 			return m_CurrrentTargetable;
 		}
 

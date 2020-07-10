@@ -189,7 +189,7 @@ namespace TowerDefense.Affectors
 			m_FireTimer -= Time.deltaTime;
 			if (trackingEnemy != null && m_FireTimer <= 0.0f)
 			{
-				OnFireTimer();
+                OnFireTimer();
 				m_FireTimer = 1 / fireRate;
 			}
 		}
@@ -199,7 +199,7 @@ namespace TowerDefense.Affectors
 		/// </summary>
 		protected virtual void OnFireTimer()
 		{
-			if (fireCondition != null)
+            if (fireCondition != null)
 			{
 				if (!fireCondition())
 				{

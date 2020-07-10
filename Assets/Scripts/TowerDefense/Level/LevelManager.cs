@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Assets.Scripts.TowerDefense.Level.WaveStrategy;
 using Core.Economy;
 using Core.Health;
@@ -11,6 +13,7 @@ using TowerDefense.Game;
 using TowerDefense.Towers.Data;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 namespace TowerDefense.Level
 {
@@ -208,12 +211,10 @@ namespace TowerDefense.Level
 			// Iterate through home bases and subscribe
 			numberOfHomeBases = homeBases.Length;
 			numberOfHomeBasesLeft = numberOfHomeBases;
-			for (int i = 0; i < numberOfHomeBases; i++)
-			{
-				homeBases[i].died += OnHomeBaseDestroyed;
-			}
-
-            levelFailed = Prompt;
+            for (int i = 0; i < numberOfHomeBases; i++)
+            {
+                homeBases[i].died += OnHomeBaseDestroyed;
+            }
         }
 
 		/// <summary>
@@ -280,12 +281,9 @@ namespace TowerDefense.Level
 
 			LevelState oldState = levelState;
 			levelState = newState;
-			if (levelStateChanged != null)
-			{
-				levelStateChanged(oldState, newState);
-			}
-			
-			switch (newState)
+            levelStateChanged?.Invoke(oldState, newState);
+
+            switch (newState)
 			{
 				case LevelState.SpawningEnemies:
 					waveManager.StartWaves();
@@ -315,12 +313,9 @@ namespace TowerDefense.Level
 			numberOfHomeBasesLeft--;
 
 			// Call the destroyed event
-			if (homeBaseDestroyed != null)
-			{
-				homeBaseDestroyed();
-			}
+            homeBaseDestroyed?.Invoke();
 
-			// If there are no home bases left and the level is not over then set the level to lost
+            // If there are no home bases left and the level is not over then set the level to lost
 			if ((numberOfHomeBasesLeft == 0) && !isGameOver)
 			{
 				ChangeLevelState(LevelState.Lose);
@@ -349,13 +344,12 @@ namespace TowerDefense.Level
 		/// </summary>
 		protected virtual void SafelyCallLevelFailed()
         {
-			Debug.Log("Level failed called");
             levelFailed?.Invoke();
         }
 
         public void AddScore(string name, int score)
         {
-            File.AppendAllText("highscore.txt", $"{name}=5" + Environment.NewLine);
+            File.AppendAllText("highscore.txt", $"{name}={score}" + Environment.NewLine);
         }
 
         public List<Tuple<string, int>> GetHighScores()
@@ -375,23 +369,30 @@ namespace TowerDefense.Level
             return result.OrderBy(x => x.Item2).Reverse().ToList();
 		}
 
-        public void DisplayHighScore()
+        public void DisplayHighScore(Action a)
         {
             var obj = Instantiate(HighScoreGameObject, GameUI.transform);
-            var text = obj.GetComponent<HighScoreText>();
-            obj.transform.parent = GameUI.transform;
-            obj.transform.position = GameUI.transform.position;
-            text.Set(GetHighScores());
-		}
+            var scoreManager = obj.GetComponent<HighScoreManager>();
 
-        public void Prompt()
+			obj.transform.parent = GameUI.transform;
+            obj.transform.position = GameUI.transform.position;
+            scoreManager.Set(GetHighScores());
+			scoreManager.OnButtonClick(() =>
+            {
+                Destroy(obj);
+                a.Invoke();
+
+            });
+        }
+
+        public void Prompt(Action a)
         {
             var obj = Instantiate(NamePromptGameObject, GameUI.transform);
             var nameReader = obj.GetComponent<NameReader>();
             nameReader.onNameSubmit += s =>
             {
                 AddScore(s, waveManager.score);
-                DisplayHighScore();
+                DisplayHighScore(a);
 				Destroy(obj);
             };
             obj.transform.parent = GameUI.transform;

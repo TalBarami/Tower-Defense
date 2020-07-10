@@ -80,42 +80,42 @@ namespace TowerDefense.Input
 			}
 			
 			// place towers with keyboard numbers
-			if (LevelManager.instanceExists)
-			{
-				int towerLibraryCount = LevelManager.instance.towerLibrary.Count;
-
-				// find the lowest value between 9 (keyboard numbers)
-				// and the amount of towers in the library
-				int count = Mathf.Min(9, towerLibraryCount);
-				KeyCode highestKey = KeyCode.Alpha1 + count;
-
-				for (var key = KeyCode.Alpha1; key < highestKey; key++)
-				{
-					// add offset for the KeyCode Alpha 1 index to find correct keycodes
-					if (UnityInput.GetKeyDown(key))
-					{
-						Tower controller = LevelManager.instance.towerLibrary[key - KeyCode.Alpha1];
-						if (LevelManager.instance.currency.CanAfford(controller.purchaseCost))
-						{
-							if (m_GameUI.isBuilding)
-							{
-								m_GameUI.CancelGhostPlacement();
-							}
-							GameUI.instance.SetToBuildMode(controller);
-							GameUI.instance.TryMoveGhost(InputController.instance.basicMouseInfo);
-						}
-						break;
-					}
-				}
-
-				// special case for 0 mapping to index 9
-				if (count < 10 && UnityInput.GetKeyDown(KeyCode.Alpha0))
-				{
-					Tower controller = LevelManager.instance.towerLibrary[9];
-					GameUI.instance.SetToBuildMode(controller);
-					GameUI.instance.TryMoveGhost(InputController.instance.basicMouseInfo);
-				}
-			}
+			// if (LevelManager.instanceExists)
+			// {
+				// int towerLibraryCount = LevelManager.instance.towerLibrary.Count;
+				//
+				// // find the lowest value between 9 (keyboard numbers)
+				// // and the amount of towers in the library
+				// int count = Mathf.Min(9, towerLibraryCount);
+				// KeyCode highestKey = KeyCode.Alpha1 + count;
+				//
+				// for (var key = KeyCode.Alpha1; key < highestKey; key++)
+				// {
+				// 	// add offset for the KeyCode Alpha 1 index to find correct keycodes
+				// 	if (UnityInput.GetKeyDown(key))
+				// 	{
+				// 		Tower controller = LevelManager.instance.towerLibrary[key - KeyCode.Alpha1];
+				// 		if (LevelManager.instance.currency.CanAfford(controller.purchaseCost))
+				// 		{
+				// 			if (m_GameUI.isBuilding)
+				// 			{
+				// 				m_GameUI.CancelGhostPlacement();
+				// 			}
+				// 			GameUI.instance.SetToBuildMode(controller);
+				// 			GameUI.instance.TryMoveGhost(InputController.instance.basicMouseInfo);
+				// 		}
+				// 		break;
+				// 	}
+				// }
+				//
+				// // special case for 0 mapping to index 9
+				// if (count < 10 && UnityInput.GetKeyDown(KeyCode.Alpha0))
+				// {
+				// 	Tower controller = LevelManager.instance.towerLibrary[9];
+				// 	GameUI.instance.SetToBuildMode(controller);
+				// 	GameUI.instance.TryMoveGhost(InputController.instance.basicMouseInfo);
+				// }
+			// }
 		}
 
 		/// <summary>
