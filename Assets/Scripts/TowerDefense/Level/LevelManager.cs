@@ -331,34 +331,27 @@ namespace TowerDefense.Level
 		/// Calls the <see cref="levelCompleted"/> event
 		/// </summary>
 		protected virtual void SafelyCallLevelCompleted()
-		{
-			if (levelCompleted != null)
-			{
-				levelCompleted();
-			}
-		}
+        {
+            Debug.Log("Level completed called");
+			levelCompleted?.Invoke();
+        }
 
 		/// <summary>
 		/// Calls the <see cref="numberOfEnemiesChanged"/> event
 		/// </summary>
 		protected virtual void SafelyCallNumberOfEnemiesChanged()
-		{
-			if (numberOfEnemiesChanged != null)
-			{
-				numberOfEnemiesChanged(numberOfEnemies);
-			}
-		}
+        {
+            numberOfEnemiesChanged?.Invoke(numberOfEnemies);
+        }
 
 		/// <summary>
 		/// Calls the <see cref="levelFailed"/> event
 		/// </summary>
 		protected virtual void SafelyCallLevelFailed()
         {
-            if (levelFailed != null)
-			{
-				levelFailed();
-			}
-		}
+			Debug.Log("Level failed called");
+            levelFailed?.Invoke();
+        }
 
         public void AddScore(string name, int score)
         {
